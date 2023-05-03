@@ -1,0 +1,2066 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_INFLUXCLOUD",
+      "label": "InfluxCloud",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "influxdb",
+      "pluginName": "InfluxDB"
+    }
+  ],
+  "__elements": {},
+  "__requires": [
+    {
+      "type": "grafana",
+      "id": "grafana",
+      "name": "Grafana",
+      "version": "9.5.1"
+    },
+    {
+      "type": "datasource",
+      "id": "influxdb",
+      "name": "InfluxDB",
+      "version": "1.0.0"
+    },
+    {
+      "type": "panel",
+      "id": "stat",
+      "name": "Stat",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "text",
+      "name": "Text",
+      "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 5,
+      "panels": [],
+      "title": "Usage",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 1
+      },
+      "id": 8,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Data In",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 1
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )    \n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Data Out",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 1
+      },
+      "id": 9,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")",
+          "refId": "A"
+        }
+      ],
+      "title": "Query Count",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "GB-hr"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 1
+      },
+      "id": 11,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: math.round(x: float(v: r._value) / 10000000.0) / 100.0\n      })\n    )",
+          "refId": "A"
+        }
+      ],
+      "title": "Storage",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\" \nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"], desc: true)\n    ",
+          "refId": "A"
+        }
+      ],
+      "title": "Data In",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\nimport \"math\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop\n)\n  |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> keep(columns: [\"_value\", \"status\", \"_time\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Out",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 13
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart, \n    stop: v.timeRangeStop,\n)\n   |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n |> sort(columns: [\"_time\"], desc: false)   \n\n\n  |> aggregateWindow(every: 1h, fn: sum)\n  |> set(key: \"_field\", value: \"queries\")\n  ",
+          "refId": "A"
+        }
+      ],
+      "title": "Query Count",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 13
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\n\n//Data returned from usage.from() uses the ID value for the buckets. This function will remap the data to use the name of the bucket\nb = buckets()\nbucketNameForID = (id) => {\n    row = b \n        |> filter(fn: (r) => r.id == id) \n        |> findRecord(fn: (key) => true, idx: 0)\n    return row.name\n}\n\nbucket_ids = b \n    |> findColumn(fn: (key) => true, column: \"id\")\n\ndata_buckets = usage.from(start: v.timeRangeStart,\n    stop: v.timeRangeStop) \n    |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\")\n    |> map(fn: (r) => ({ r with bucket_name: if contains(value: r[\"bucket_id\"], set: bucket_ids) then bucketNameForID(id: r[\"bucket_id\"]) else \"unknown bucket\"}))\n    |> keep(columns: [\"_time\", \"_value\", \"bucket_id\", \"bucket_name\"])\n    |> group(columns: [\"bucket_name\"])\n\ndata_all = data_buckets\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> set(key: \"bucket_name\", value: \"all buckets\")\n\nunion(tables: [data_buckets, data_all])\n    |> group(columns: [\"bucket_name\"])",
+          "refId": "A"
+        }
+      ],
+      "title": "Storage (by Bucket)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 21,
+      "panels": [],
+      "title": "Cost",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "id": 20,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "# Costs\n\nThis section provides an estimate of billing costs based on usage and the pricing entered in the dashboard's variables.\n\nUp to date pricing for InfluxCloud can be found at https://www.influxdata.com/influxdb-pricing/",
+        "mode": "markdown"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n        |> map(fn: (r) =>\n    ({r with\n      _value: math.round(x: float(v: r._value) / 10000000.0) / 100.0 * ${data_out_cost}\n    }))\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n",
+          "refId": "data_out"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "hide": false,
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: math.round(x: float(v: r._value) / 10000.0) / 100.0 * ${data_in_cost} })) \n",
+          "refId": "data_in"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "hide": false,
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")\n    |> map(fn: (r) => ({\n       _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
+          "refId": "Queries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "hide": false,
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: (math.round(x: float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n\n",
+          "refId": "Storage"
+        }
+      ],
+      "title": "Estimated Total Cost",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "includeTimeField": false,
+            "mode": "reduceFields",
+            "reducers": [
+              "sum"
+            ]
+          }
+        }
+      ],
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 22,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n        |> map(fn: (r) =>\n    ({r with\n      _value: math.round(x: float(v: r._value) / 10000000.0) / 100.0 * ${data_out_cost}\n    }))\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n",
+          "refId": "data_out"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "hide": false,
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: math.round(x: float(v: r._value) / 10000.0) / 100.0 * ${data_in_cost} })) \n",
+          "refId": "data_in"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "hide": false,
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")\n    |> map(fn: (r) => ({\n       _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
+          "refId": "Queries"
+        },
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "hide": false,
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: (math.round(x: float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n\n",
+          "refId": "Storage"
+        }
+      ],
+      "title": "Estimated Total Cost",
+      "transformations": [
+        {
+          "id": "merge",
+          "options": {}
+        },
+        {
+          "id": "reduce",
+          "options": {
+            "includeTimeField": false,
+            "mode": "reduceFields",
+            "reducers": [
+              "sum"
+            ]
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 30
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n        |> map(fn: (r) =>\n    ({r with\n      reads_gb: math.round(x: float(v: r._value) / 10000000.0) / 100.0 * ${data_out_cost}\n    }))\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"reads_gb\")\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Estimated Data In Cost",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "$0.00",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 30
+      },
+      "id": 17,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: math.round(x: float(v: r._value) / 10000.0) / 100.0 * ${data_in_cost} })) ",
+          "refId": "A"
+        }
+      ],
+      "title": "Estimated Data Out Cost",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "$0.00",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 30
+      },
+      "id": 18,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from( \n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")\n    |> map(fn: (r) => ({\n       _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Estimated Query Cost",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "decimals": 2,
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 30
+      },
+      "id": 19,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: (math.round(x: float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n\n",
+          "refId": "A"
+        }
+      ],
+      "title": "Storage",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 34
+      },
+      "id": 23,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\" \nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"], desc: true)\n    |> map(fn: (r) => ({r with _value: (float(v: r._value) / 100000.0) * ${data_in_cost}}))\n    \n    ",
+          "refId": "A"
+        }
+      ],
+      "title": "Data In Estimated Cost",
+      "transformations": [],
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 24,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\nimport \"math\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop\n)\n  |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> keep(columns: [\"_value\", \"status\", \"_time\"])\n    |> map(fn: (r) => ({r with _value: (float(v: r._value) / 1000000000.0) * ${data_out_cost}}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Data Out Estimated Cost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 42
+      },
+      "id": 25,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart, \n    stop: v.timeRangeStop,\n)\n   |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> sort(columns: [\"_time\"], desc: false)   \n\n\n  |> aggregateWindow(every: 1h, fn: sum)\n  |> map(fn: (r) => ({r with _value: (float(v: r._value) / 100.0) * ${query_cost}}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Estimated Query Cost",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 42
+      },
+      "id": 26,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\n\n//Data returned from usage.from() uses the ID value for the buckets. This function will remap the data to use the name of the bucket\nb = buckets()\nbucketNameForID = (id) => {\n    row = b \n        |> filter(fn: (r) => r.id == id) \n        |> findRecord(fn: (key) => true, idx: 0)\n    return row.name\n}\n\nbucket_ids = b \n    |> findColumn(fn: (key) => true, column: \"id\")\n\ndata_buckets = usage.from(start: v.timeRangeStart,\n    stop: v.timeRangeStop) \n    |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\")\n    |> map(fn: (r) => ({ r with bucket_name: if contains(value: r[\"bucket_id\"], set: bucket_ids) then bucketNameForID(id: r[\"bucket_id\"]) else \"unknown bucket\"}))\n    |> keep(columns: [\"_time\", \"_value\", \"bucket_id\", \"bucket_name\"])\n    |> group(columns: [\"bucket_name\"])\n\ndata_all = data_buckets\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> set(key: \"bucket_name\", value: \"all buckets\")\n\nunion(tables: [data_buckets, data_all])\n    |> group(columns: [\"bucket_name\"])\n    |> map(fn: (r) => ({r with _value: (float(v: r._value) / 1000000000.0)* ${storage_cost}}))",
+          "refId": "A"
+        }
+      ],
+      "title": "Storage (by Bucket)",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 50
+      },
+      "id": 7,
+      "panels": [],
+      "title": "Rate Limits",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "KBs"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 51
+      },
+      "id": 28,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\nimport \"csv\"\nlimits = usage.limits()\ncsvData = \"#datatype,string,long,string\n#group,false,false,false\n#default,,,\n,result,table,column\n,,0,*\n\"\ncsv.from(csv: csvData)\n  |> map(fn: (r) => ({\n    write: limits.rate.writeKBs\n  }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Write Limit",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "KBs"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 51
+      },
+      "id": 27,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\nimport \"csv\"\nlimits = usage.limits()\ncsvData = \"#datatype,string,long,string\n#group,false,false,false\n#default,,,\n,result,table,column\n,,0,*\n\"\ncsv.from(csv: csvData)\n  |> map(fn: (r) => ({\n    read: limits.rate.readKBs\n  }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Read Limit",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "semi-dark-blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 51
+      },
+      "id": 15,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"experimental/usage\"\nimport \"csv\"\nlimits = usage.limits()\ncsvData = \"#datatype,string,long,string\n#group,false,false,false\n#default,,,\n,result,table,column\n,,0,*\n\"\ncsv.from(csv: csvData)\n  |> map(fn: (r) => ({\n    cardinality: limits.rate.cardinality\n  }))",
+          "refId": "A"
+        }
+      ],
+      "title": "Cardinality Limit",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 25
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 0,
+        "y": 55
+      },
+      "id": 12,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"array\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\n\ndata_0 = array.from(rows:[{_value: 0}])\ndata = usage.from(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"events\" and r._field == \"event_type_limited_write\")\n  |> sum(column: \"_value\")\nunion(tables: [data_0, data])",
+          "refId": "A"
+        }
+      ],
+      "title": "Write Limiting Events",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 25
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 8,
+        "y": 55
+      },
+      "id": 13,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"array\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\n\ndata_0 = array.from(rows:[{_value: 0}])\ndata = usage.from(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"events\" and r._field == \"event_type_limited_query\")\n  |> sum(column: \"_value\")\nunion(tables: [data_0, data])",
+          "refId": "A"
+        }
+      ],
+      "title": "Read Limiting Events",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 1
+              },
+              {
+                "color": "semi-dark-red",
+                "value": 25
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 8,
+        "x": 16,
+        "y": 55
+      },
+      "id": 14,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"array\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\n\ndata_0 = array.from(rows:[{_value: 0}])\ndata = usage.from(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r._measurement == \"events\" and r._field == \"event_type_limited_cardinality\")\n  |> sum(column: \"_value\")\nunion(tables: [data_0, data])",
+          "refId": "A"
+        }
+      ],
+      "title": "Cardinality Limiting Events",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "If you exceed your plan's limits, the event will be logged to help you track when the events occur. For more information on your rate limits, check out our documentation. \n\nhttps://docs.influxdata.com/influxdb/cloud/account-management/data-usage/#exceeded-rate-limits",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "noValue": "No results",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 59
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"events\"\n    )\n  |> sort(columns: [\"_time\"], desc: false)  \n  |> aggregateWindow(every: v.windowPeriod, fn: sum)",
+          "refId": "A"
+        }
+      ],
+      "title": "Rate Limiting Events",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "0.02",
+          "value": "0.02"
+        },
+        "description": "See https://www.influxdata.com/influxdb-pricing/ for latest pricing",
+        "hide": 0,
+        "label": "Data In $/MB",
+        "name": "data_in_cost",
+        "options": [
+          {
+            "selected": true,
+            "text": "0.02",
+            "value": "0.02"
+          }
+        ],
+        "query": "0.02",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "0.01",
+          "value": "0.01"
+        },
+        "description": "See https://www.influxdata.com/influxdb-pricing/ for latest pricing",
+        "hide": 0,
+        "label": "Query Cost $/100 queries",
+        "name": "query_cost",
+        "options": [
+          {
+            "selected": true,
+            "text": "0.01",
+            "value": "0.01"
+          }
+        ],
+        "query": "0.01",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "0.002",
+          "value": "0.002"
+        },
+        "description": "See https://www.influxdata.com/influxdb-pricing/ for latest pricing",
+        "hide": 0,
+        "label": "Storage $/GB-hour",
+        "name": "storage_cost",
+        "options": [
+          {
+            "selected": true,
+            "text": "0.002",
+            "value": "0.002"
+          }
+        ],
+        "query": "0.002",
+        "skipUrlSync": false,
+        "type": "textbox"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "0.09",
+          "value": "0.09"
+        },
+        "description": "See https://www.influxdata.com/influxdb-pricing/ for latest pricing",
+        "hide": 0,
+        "label": "Data out $/GB",
+        "name": "data_out_cost",
+        "options": [
+          {
+            "selected": true,
+            "text": "0.09",
+            "value": "0.09"
+          }
+        ],
+        "query": "0.09",
+        "skipUrlSync": false,
+        "type": "textbox"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "InfluxCloud Usage Dashboard",
+  "uid": "c941190b-7e3d-4f9c-ab5b-de5328dff6b3",
+  "version": 13,
+  "weekStart": ""
+}
