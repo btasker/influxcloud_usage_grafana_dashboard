@@ -54,6 +54,12 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -99,7 +105,7 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "decbytes"
         },
         "overrides": []
       },
@@ -160,7 +166,7 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "decbytes"
         },
         "overrides": []
       },
@@ -192,7 +198,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )    \n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )    \n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()",
           "refId": "A"
         }
       ],
@@ -253,7 +259,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")",
           "refId": "A"
         }
       ],
@@ -315,7 +321,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: math.round(x: float(v: r._value) / 10000000.0) / 100.0\n      })\n    )",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 0)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: math.round(x: float(v: r._value) / 10000000.0) / 100.0\n      })\n    )",
           "refId": "A"
         }
       ],
@@ -373,7 +379,7 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "decbytes"
         },
         "overrides": []
       },
@@ -460,7 +466,7 @@
               }
             ]
           },
-          "unit": "bytes"
+          "unit": "decbytes"
         },
         "overrides": []
       },
@@ -774,7 +780,6 @@
           "color": {
             "mode": "thresholds"
           },
-          "decimals": 2,
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
@@ -821,7 +826,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n        |> map(fn: (r) =>\n    ({r with\n      _value: math.round(x: float(v: r._value) / 10000000.0) / 100.0 * ${data_out_cost}\n    }))\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n",
+          "query": "import \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: float(v: r._value) / 1000000000.0 / 100.0 * ${data_in_cost} })) \n",
           "refId": "data_out"
         },
         {
@@ -830,7 +835,7 @@
             "uid": "${DS_INFLUXCLOUD}"
           },
           "hide": false,
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: math.round(x: float(v: r._value) / 10000.0) / 100.0 * ${data_in_cost} })) \n",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: v.timeRangeStart)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> filter(fn: (r) => exists r._value)\n    |> group()    \n    |> sum()\n    |> map(fn: (r) =>\n       ({ \n           // Convert to MBs and then to dollars before applying pricing\n           _value: (float(v: r._value) / 1000000.0) / 100.0 * ${data_in_cost}\n       }))\n\n",
           "refId": "data_in"
         },
         {
@@ -839,7 +844,7 @@
             "uid": "${DS_INFLUXCLOUD}"
           },
           "hide": false,
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")\n    |> map(fn: (r) => ({\n       _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from( \n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({\n       _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
           "refId": "Queries"
         },
         {
@@ -848,7 +853,7 @@
             "uid": "${DS_INFLUXCLOUD}"
           },
           "hide": false,
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: (math.round(x: float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n\n",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n  |> range(start: v.timeRangeStart)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: ((float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n",
           "refId": "Storage"
         }
       ],
@@ -882,8 +887,8 @@
           "color": {
             "mode": "thresholds"
           },
-          "decimals": 2,
           "mappings": [],
+          "noValue": "NaN",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -901,69 +906,6 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 30
-      },
-      "id": 16,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "9.5.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "influxdb",
-            "uid": "${DS_INFLUXCLOUD}"
-          },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and r._field == \"resp_bytes\"\n      and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n    )\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n        |> map(fn: (r) =>\n    ({r with\n      reads_gb: math.round(x: float(v: r._value) / 10000000.0) / 100.0 * ${data_out_cost}\n    }))\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"reads_gb\")\n",
-          "refId": "A"
-        }
-      ],
-      "title": "Estimated Data In Cost",
-      "transformations": [],
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "${DS_INFLUXCLOUD}"
-      },
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "decimals": 2,
-          "mappings": [],
-          "noValue": "$0.00",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "currencyUSD"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
         "y": 30
       },
       "id": 17,
@@ -988,7 +930,69 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: math.round(x: float(v: r._value) / 10000.0) / 100.0 * ${data_in_cost} })) ",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> filter(fn: (r) => r.status == \"204\")\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({r with _value: float(v: r._value) / 1000000.0 / 100.0 * ${data_in_cost} })) ",
+          "refId": "A"
+        }
+      ],
+      "title": "Estimated Data In Cost",
+      "transformations": [],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "influxdb",
+        "uid": "${DS_INFLUXCLOUD}"
+      },
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "noValue": "NaN",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "currencyUSD"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 30
+      },
+      "id": 16,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.5.1",
+      "targets": [
+        {
+          "datasource": {
+            "type": "influxdb",
+            "uid": "${DS_INFLUXCLOUD}"
+          },
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) =>\n        r._measurement == \"http_request\"\n        and r._field == \"resp_bytes\"\n        and (r.endpoint == \"/api/v2/query\" or r.endpoint == \"/query\")\n        )\n    |> filter(fn: (r) => r.status == \"200\")\n    |> group()\n    |> aggregateWindow(every: 1h, fn: sum)\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> filter(fn: (r) => exists r._value)\n    |> group()    \n    |> sum()\n    |> map(fn: (r) =>\n        ({ \n            // Convert to GBs and then to dollars before applying pricing\n            _value: (float(v: r._value) / 1000000000.0) / 100.0 * ${data_out_cost}\n        }))\n\n\n",
           "refId": "A"
         }
       ],
@@ -1008,7 +1012,7 @@
             "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "$0.00",
+          "noValue": "NaN",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1050,7 +1054,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from( \n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n//   |> range(start: 2021-03-01T00:00:00.000Z)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> rename(columns: {_value: \"query_count\"})\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum(column: \"query_count\")\n    |> map(fn: (r) => ({\n       _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from( \n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) =>\n      r._measurement == \"query_count\"\n    )\n    |> group(columns: [\"_time\"])\n    |> sum()\n    |> group()\n    |> sort(columns: [\"_time\"])\n    |> group()\n    |> sum()\n    |> map(fn: (r) => ({\n        _value: (float(v:r._value) / 100.00) * ${query_cost}\n    }))",
           "refId": "A"
         }
       ],
@@ -1069,9 +1073,8 @@
           "color": {
             "mode": "thresholds"
           },
-          "decimals": 2,
           "mappings": [],
-          "noValue": "0",
+          "noValue": "NaN",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1113,7 +1116,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n    |> range(start: 2021-03-01T00:00:00.000Z)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: (math.round(x: float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n\n",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\"\nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n  |> filter(fn: (r) => r._measurement == \"storage_usage_bucket_bytes\" and r._field == \"gauge\")\n  |> range(start: v.timeRangeStart)\n    |> aggregateWindow(every: 1h, fn: mean)\n    |> fill(column: \"_value\", value: 0.0)\n    |> group()\n    |> sum()\n    |> map(fn: (r) =>\n      ({r with\n        _value: ((float(v: r._value) / 10000000.0) / 100.0) * ${storage_cost}\n      })\n    )\n\n",
           "refId": "A"
         }
       ],
@@ -1201,7 +1204,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXCLOUD}"
           },
-          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\" \nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"], desc: true)\n    |> map(fn: (r) => ({r with _value: (float(v: r._value) / 100000.0) * ${data_in_cost}}))\n    \n    ",
+          "query": "import \"csv\"\nimport \"math\"\nimport \"date\"\nimport \"strings\" \nimport \"experimental/json\"\nimport \"experimental/usage\"\n\nusage.from(\n    start: v.timeRangeStart,\n    stop: v.timeRangeStop,\n)\n   |> filter(fn: (r) =>\n      r._measurement == \"http_request\"\n      and (r.endpoint == \"/api/v2/write\" or r.endpoint == \"/write\")\n      and r._field == \"req_bytes\"\n    )\n    |> group()\n    |> keep(columns: [\"_value\", \"_field\", \"_time\"])\n    |> fill(column: \"_value\", value: 0)\n    |> sort(columns: [\"_time\"], desc: true)\n    |> map(fn: (r) => ({r with _value: (float(v: r._value) / 1000000.0) * ${data_in_cost}}))\n    \n    ",
           "refId": "A"
         }
       ],
@@ -1343,8 +1346,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1430,8 +1432,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1501,8 +1502,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               }
             ]
           },
@@ -1531,7 +1531,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.5.1",
+      "pluginVersion": "9.2.8",
       "targets": [
         {
           "datasource": {
@@ -1562,8 +1562,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               }
             ]
           },
@@ -1592,7 +1591,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.5.1",
+      "pluginVersion": "9.2.8",
       "targets": [
         {
           "datasource": {
@@ -1623,8 +1622,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "semi-dark-blue",
-                "value": null
+                "color": "semi-dark-blue"
               }
             ]
           }
@@ -1652,7 +1650,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.5.1",
+      "pluginVersion": "9.2.8",
       "targets": [
         {
           "datasource": {
@@ -1682,8 +1680,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "orange",
@@ -1719,7 +1716,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.5.1",
+      "pluginVersion": "9.2.8",
       "targets": [
         {
           "datasource": {
@@ -1750,8 +1747,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "orange",
@@ -1787,7 +1783,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.5.1",
+      "pluginVersion": "9.2.8",
       "targets": [
         {
           "datasource": {
@@ -1818,8 +1814,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "orange",
@@ -1855,7 +1850,7 @@
         },
         "textMode": "auto"
       },
-      "pluginVersion": "9.5.1",
+      "pluginVersion": "9.2.8",
       "targets": [
         {
           "datasource": {
@@ -1916,8 +1911,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1970,8 +1964,8 @@
       {
         "current": {
           "selected": false,
-          "text": "0.02",
-          "value": "0.02"
+          "text": "0.002",
+          "value": "0.002"
         },
         "description": "See https://www.influxdata.com/influxdb-pricing/ for latest pricing",
         "hide": 0,
@@ -1980,17 +1974,17 @@
         "options": [
           {
             "selected": true,
-            "text": "0.02",
-            "value": "0.02"
+            "text": "0.002",
+            "value": "0.002"
           }
         ],
-        "query": "0.02",
+        "query": "0.002",
         "skipUrlSync": false,
         "type": "textbox"
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "0.01",
           "value": "0.01"
         },
@@ -2011,7 +2005,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "0.002",
           "value": "0.002"
         },
@@ -2032,7 +2026,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "0.09",
           "value": "0.09"
         },
@@ -2059,8 +2053,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "InfluxCloud Usage Dashboard",
-  "uid": "c941190b-7e3d-4f9c-ab5b-de5328dff6b3",
-  "version": 13,
+  "title": "InfluxCloud Org Usage Dashboard",
+  "uid": "c941190b-7e3d-4f9c-ab5b-de5328dff6b4",
+  "version": 1,
   "weekStart": ""
 }
