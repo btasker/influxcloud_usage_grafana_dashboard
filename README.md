@@ -27,7 +27,7 @@ The dashboard visualises the following metrics
 
 ### Setup
 
-You'll need to ensure that you have a Grafana datasource configured linked to your InfluxDB Cloud organisation.
+Add your InfluxDB Cloud organisation [to Grafana as a Flux datasource](https://docs.influxdata.com/influxdb/cloud/tools/grafana/?t=Flux).
 
 The token used for this data-source must, at minimum, have the following privileges
 
